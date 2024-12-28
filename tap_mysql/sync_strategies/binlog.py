@@ -515,31 +515,31 @@ def handle_update_rows_event(event, catalog_entry, state, columns, rows_saved, t
     return rows_saved
 
 
-def handle_delete_rows_event(event, catalog_entry, state, columns, rows_saved, time_extracted):
-    stream_version = common.get_stream_version(catalog_entry.tap_stream_id, state)
-    db_column_types = get_db_column_types(event)
+# def handle__rows_event(event, catalog_entry, state, columns, rows_saved, time_extracted):
+#     stream_version = common.get_stream_version(catalog_entry.tap_stream_id, state)
+#     db_column_types = get_db_column_types(event)
 
-    event_ts = datetime.datetime.utcfromtimestamp(event.timestamp) \
-        .replace(tzinfo=pytz.UTC).isoformat()
+#     event_ts = datetime.datetime.utcfromtimestamp(event.timestamp) \
+#         .replace(tzinfo=pytz.UTC).isoformat()
 
-    for row in event.rows:
-        vals = row['values']
-        vals[SDC_DELETED_AT] = event_ts
+#     for row in event.rows:
+#         vals = row['values']
+#         vals[SDC_D_AT] = event_ts
 
-        filtered_vals = {k: v for k, v in vals.items()
-                         if k in columns}
+#         filtered_vals = {k: v for k, v in vals.items()
+#                          if k in columns}
 
-        record_message = row_to_singer_record(catalog_entry,
-                                              stream_version,
-                                              db_column_types,
-                                              filtered_vals,
-                                              time_extracted)
+#         record_message = row_to_singer_record(catalog_entry,
+#                                               stream_version,
+#                                               db_column_types,
+#                                               filtered_vals,
+#                                               time_extracted)
 
-        singer.write_message(record_message)
+#         singer.write_message(record_message)
 
-        rows_saved += 1
+#         rows_saved += 1
 
-    return rows_saved
+#     return rows_saved
 
 
 def generate_streams_map(binlog_streams):
@@ -558,7 +558,7 @@ def generate_streams_map(binlog_streams):
 
 
 def __get_diff_in_columns_list(
-        binlog_event: Union[WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent],
+        binlog_event: Union[WriteRowsEvent, UpdateRowsEvent],
         schema_properties: Set[str],
         ignore_columns: Optional[Set[str]] = None) -> Set[str]:
     """
@@ -753,13 +753,13 @@ def _run_binlog_sync(
                                                                      processed_rows_events,
                                                                      time_extracted)
 
-                elif isinstance(binlog_event, DeleteRowsEvent):
-                    processed_rows_events = handle_delete_rows_event(binlog_event,
-                                                                     catalog_entry,
-                                                                     state,
-                                                                     columns,
-                                                                     processed_rows_events,
-                                                                     time_extracted)
+                # elif isinstance(binlog_event, DeleteRowsEvent):
+                #     processed_rows_events = handle_delete_rows_event(binlog_event,
+                #                                                      catalog_entry,
+                #                                                      state,
+                #                                                      columns,
+                #                                                      processed_rows_events,
+                #                                                      time_extracted)
                 else:
                     LOGGER.debug("Skipping event for table %s.%s as it is not an INSERT, UPDATE, or DELETE",
                                  binlog_event.schema,
@@ -819,7 +819,7 @@ def create_binlog_stream_reader(
         'is_mariadb': connection.MARIADB_ENGINE == engine,
         'server_id': server_id,  # slave server ID
         'report_slave': socket.gethostname() or 'pipelinewise',  # this is so this slave appears in SHOW SLAVE HOSTS;
-        'only_events': [WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent],
+        'only_events': [WriteRowsEvent, UpdateRowsEvent],
     }
 
     # only fetch events pertaining to the schemas in filter db.
