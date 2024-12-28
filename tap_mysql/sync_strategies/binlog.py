@@ -18,7 +18,6 @@ from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.constants import FIELD_TYPE
 from pymysqlreplication.event import RotateEvent, MariadbGtidEvent, GtidEvent
 from pymysqlreplication.row_event import (
-    DeleteRowsEvent,
     UpdateRowsEvent,
     WriteRowsEvent,
 )
